@@ -1,0 +1,35 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Build and Push Patient Service Image
+        run: |
+          docker build -t patient-service -f src/patient-service/Dockerfile src/patient-service
+          docker tag patient-service:latest ${{ secrets.ECR_REGISTRY }}/hcl-bayer-patient_ecr-dev:${{ github.sha }}
+          docker push ${{ secrets.ECR_REGISTRY }}/hcl-bayer-patient_ecr-dev:${{ github.sha }}
+
+      - name: Build and Push Appointment Service Image
+        run: |
+          docker build -t appointment-service -f src/appointment-service/Dockerfile src/appointment-service
+          docker tag appointment-service:latest ${{ secrets.ECR_REGISTRY }}/hcl-bayer-appointment_ecr-dev:${{ github.sha }}
+          docker push ${{ secrets.ECR_REGISTRY }}/hcl-bayer-appointment_ecr-dev:${{ github.sha }}
