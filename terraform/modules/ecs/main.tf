@@ -37,7 +37,6 @@ resource "aws_ecs_task_definition" "appointment" {
   cpu                      = var.task_cpu
   memory                   = var.task_memory
   execution_role_arn       = var.execution_role_arn
-
   container_definitions = jsonencode([{
     name  = "appointment-task"
     image = var.appointment_image
@@ -88,13 +87,13 @@ resource "aws_ecs_service" "patient" {
   desired_count   = var.desired_count
   launch_type     = "FARGATE"
   network_configuration {
-    subnets          = [var.private_subnet]
+    subnets          = var.private_subnet_ids
     security_groups  = [var.ecs_security_group_id]
     assign_public_ip = false
   }
   load_balancer {
     target_group_arn = aws_lb_target_group.patient.arn
-    container_name   = "patient-service"
+    container_name   = "patient-task" # Corrected from "patient-service"
     container_port   = var.patient_container_port
   }
 }
@@ -107,13 +106,13 @@ resource "aws_ecs_service" "appointment" {
   desired_count   = var.desired_count
   launch_type     = "FARGATE"
   network_configuration {
-    subnets          = [var.private_subnet]
+    subnets          = var.private_subnet_ids
     security_groups  = [var.ecs_security_group_id]
     assign_public_ip = false
   }
   load_balancer {
     target_group_arn = aws_lb_target_group.appointment.arn
-    container_name   = "appointment-service"
+    container_name   = "appointment-task" # Corrected from "appointment-service"
     container_port   = var.appointment_container_port
   }
 }

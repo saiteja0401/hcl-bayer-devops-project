@@ -1,16 +1,15 @@
-#This is the main Terraform file where we tie everything together.
-
+# This is the main Terraform file where we tie everything together.
 module "vpc" {
-  source       = "./modules/vpc"
-  region       = var.region
-  cidr_block   = var.cidr_block
-  customer     = var.customer
-  project      = var.project
-  environment  = var.environment
-  pub_sub_cidr = var.pub_sub_cidr
-  pri_sub_cidr = var.pri_sub_cidr
-  public_az    = var.public_az
-  private_az   = var.private_az
+  source               = "./modules/vpc"
+  region               = var.region
+  cidr_block           = var.cidr_block
+  customer             = var.customer
+  project              = var.project
+  environment          = var.environment
+  public_subnet_cidrs  = var.public_subnet_cidrs
+  private_subnet_cidrs = var.private_subnet_cidrs
+  public_azs           = var.public_azs
+  private_azs          = var.private_azs
 }
 
 module "security_groups" {
@@ -49,7 +48,7 @@ module "ecs" {
   project                    = var.project
   customer                   = var.customer
   vpc_id                     = module.vpc.vpc_id
-  private_subnet             = module.vpc.private_subnet_id
+  private_subnet_ids         = module.vpc.private_subnet_ids
   task_cpu                   = var.task_cpu
   task_memory                = var.task_memory
   patient_container_port     = var.patient_container_port
@@ -70,9 +69,8 @@ module "alb" {
   project                      = var.project
   environment                  = var.environment
   vpc_id                       = module.vpc.vpc_id
-  public_subnet_id             = module.vpc.public_subnet_id
+  public_subnet_ids            = module.vpc.public_subnet_ids
   alb_security_group_id        = module.security_groups.alb_security_group_id
   patient_target_group_arn     = module.ecs.patient_target_group_arn
   appointment_target_group_arn = module.ecs.appointment_target_group_arn
 }
-

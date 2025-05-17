@@ -3,7 +3,7 @@ variable "customer" {}
 variable "project" {}
 variable "environment" {}
 variable "vpc_id" {}
-variable "private_subnet" {}
+variable "private_subnet_ids" { type = list(string) }
 
 variable "task_cpu" {}
 variable "task_memory" {}

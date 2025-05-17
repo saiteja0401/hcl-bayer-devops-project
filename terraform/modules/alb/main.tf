@@ -1,11 +1,10 @@
 # Setting up the ALB to route traffic to our services
-
 resource "aws_lb" "main" {
   name               = "${var.customer}-${var.project}-alb-${var.environment}"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [var.alb_security_group_id]
-  subnets            = [var.public_subnet_id]
+  subnets            = var.public_subnet_ids
   tags = {
     Name = "${var.customer}-${var.project}-alb-${var.environment}"
   }

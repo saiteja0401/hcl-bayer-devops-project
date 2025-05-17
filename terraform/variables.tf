@@ -7,22 +7,24 @@ variable "cidr_block" {
   type = string
 }
 
-variable "pub_sub_cidr" {
-  type        = string
-  description = "public subnet"
+variable "public_subnet_cidrs" {
+  type        = list(string)
+  description = "List of public subnet CIDR blocks"
 }
 
-variable "pri_sub_cidr" {
-  type        = string
-  description = "private subnet"
+variable "private_subnet_cidrs" {
+  type        = list(string)
+  description = "List of private subnet CIDR blocks"
 }
 
-variable "public_az" {
-  type = string
+variable "public_azs" {
+  type        = list(string)
+  description = "List of public subnet Availability Zones"
 }
 
-variable "private_az" {
-  type = string
+variable "private_azs" {
+  type        = list(string)
+  description = "List of private subnet Availability Zones"
 }
 
 variable "environment" {

@@ -26,19 +26,18 @@ resource "aws_security_group" "ecs" {
   description = "Security group for ECS tasks"
   vpc_id      = var.vpc_id
   ingress {
-    description = "Allow TCP on port 3000"
-    from_port   = 3000
-    to_port     = 3000
-    protocol    = "tcp"
-    cidr_blocks = [aws_security_group.alb.id]
+    description     = "Allow TCP on port 3000"
+    from_port       = 3000
+    to_port         = 3000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id] # Corrected from cidr_blocks
   }
-
   ingress {
-    description = "Allow TCP on port 3001"
-    from_port   = 3001
-    to_port     = 3001
-    protocol    = "tcp"
-    cidr_blocks = [aws_security_group.alb.id]
+    description     = "Allow TCP on port 3001"
+    from_port       = 3001
+    to_port         = 3001
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id] # Corrected from cidr_blocks
   }
   egress {
     from_port   = 0

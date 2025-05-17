@@ -1,4 +1,4 @@
-# create vpc
+# Create VPC
 resource "aws_vpc" "main" {
   cidr_block = var.cidr_block
   tags = {
@@ -6,28 +6,29 @@ resource "aws_vpc" "main" {
   }
 }
 
-# Public subnet for the ALB
+# Public subnets for the ALB
 resource "aws_subnet" "public" {
+  count             = length(var.public_subnet_cidrs)
   vpc_id            = aws_vpc.main.id
-  cidr_block        = var.pub_sub_cidr
-  availability_zone = var.public_az
-  #   map_public_ip_on_launch = true
+  cidr_block        = var.public_subnet_cidrs[count.index]
+  availability_zone = var.public_azs[count.index]
   tags = {
-    Name = "${var.customer}-${var.project}-pub-sub-${var.environment}"
+    Name = "${var.customer}-${var.project}-pub-sub-${var.environment}-${count.index}"
   }
 }
 
-# Private subnet for our Fargate tasks
+# Private subnets for Fargate tasks
 resource "aws_subnet" "private" {
+  count             = length(var.private_subnet_cidrs)
   vpc_id            = aws_vpc.main.id
-  cidr_block        = var.pri_sub_cidr
-  availability_zone = var.private_az
+  cidr_block        = var.private_subnet_cidrs[count.index]
+  availability_zone = var.private_azs[count.index]
   tags = {
-    Name = "${var.customer}-${var.project}-pri-sub-${var.environment}"
+    Name = "${var.customer}-${var.project}-pri-sub-${var.environment}-${count.index}"
   }
 }
 
-# Internet Gateway for public subnet 
+# Internet Gateway for public subnets
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
   tags = {
@@ -35,7 +36,7 @@ resource "aws_internet_gateway" "igw" {
   }
 }
 
-# Route table for public subnet
+# Route table for public subnets
 resource "aws_route_table" "public_rt" {
   vpc_id = aws_vpc.main.id
   route {
@@ -48,11 +49,12 @@ resource "aws_route_table" "public_rt" {
 }
 
 resource "aws_route_table_association" "public_assoc" {
-  subnet_id      = aws_subnet.public.id
+  count          = length(var.public_subnet_cidrs)
+  subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public_rt.id
 }
 
-# NAT Gateway for private subnet
+# NAT Gateway for private subnets (placed in the first public subnet)
 resource "aws_eip" "nat_eip" {
   domain = "vpc"
   tags = {
@@ -62,13 +64,13 @@ resource "aws_eip" "nat_eip" {
 
 resource "aws_nat_gateway" "nat" {
   allocation_id = aws_eip.nat_eip.id
-  subnet_id     = aws_subnet.public.id
+  subnet_id     = aws_subnet.public[0].id
   tags = {
     Name = "${var.customer}-${var.project}-nat-gw-${var.environment}"
   }
 }
 
-# Route table for private subnet
+# Route table for private subnets
 resource "aws_route_table" "private_rt" {
   vpc_id = aws_vpc.main.id
   route {
@@ -81,6 +83,7 @@ resource "aws_route_table" "private_rt" {
 }
 
 resource "aws_route_table_association" "private_rt_assoc" {
-  subnet_id      = aws_subnet.private.id
+  count          = length(var.private_subnet_cidrs)
+  subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private_rt.id
 }
