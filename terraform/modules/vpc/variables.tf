@@ -1,0 +1,9 @@
+variable "region" {}
+variable "cidr_block" {}
+variable "customer" {}
+variable "project" {}
+variable "environment" {}
+variable "pub_sub_cidr" {}
+variable "pri_sub_cidr" {}
+variable "public_az" {}
+variable "private_az" {}
