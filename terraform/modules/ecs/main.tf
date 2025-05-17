@@ -3,16 +3,16 @@ resource "aws_ecs_cluster" "main" {
   name = "${var.customer}-${var.project}-ecs-cluster-${var.environment}"
 }
 
-# Task definition for Patient Service
+# Task definition for Patient task
 resource "aws_ecs_task_definition" "patient" {
-  family                   = "${var.customer}-${var.project}-patient-service-${var.environment}"
+  family                   = "${var.customer}-${var.project}-patient-task-${var.environment}"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   cpu                      = var.task_cpu
   memory                   = var.task_memory
   execution_role_arn       = var.execution_role_arn
   container_definitions = jsonencode([{
-    name  = "patient-service"
+    name  = "patient-task"
     image = var.patient_image
     portMappings = [{
       containerPort = var.patient_container_port
@@ -29,9 +29,9 @@ resource "aws_ecs_task_definition" "patient" {
   }])
 }
 
-# Task definition for Appointment Service
+# Task definition for Appointment task
 resource "aws_ecs_task_definition" "appointment" {
-  family                   = "${var.customer}-${var.project}-appointment-service-${var.environment}"
+  family                   = "${var.customer}-${var.project}-appointment-task-${var.environment}"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   cpu                      = var.task_cpu
@@ -39,7 +39,7 @@ resource "aws_ecs_task_definition" "appointment" {
   execution_role_arn       = var.execution_role_arn
 
   container_definitions = jsonencode([{
-    name  = "appointment-service"
+    name  = "appointment-task"
     image = var.appointment_image
     portMappings = [{
       containerPort = var.appointment_container_port
