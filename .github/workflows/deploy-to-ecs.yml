@@ -27,16 +27,33 @@ jobs:
 
       - name: Deploy Patient Service
         run: |
-          TASK_DEF=$(aws ecs describe-task-definition --task-definition hcl-bayer-patient-task-dev --query 'taskDefinition' --output json)
-          echo "$TASK_DEF" > taskdef.json
-          jq '.containerDefinitions[0].image = "${{ secrets.ECR_REGISTRY }}/hcl-bayer-patient_ecr-dev:${SHORT_SHA}"' taskdef.json > updated_taskdef.json
+          aws ecs describe-task-definition --task-definition hcl-bayer-patient-task-dev --query 'taskDefinition' --output json > taskdef.json
+
+          # Remove all read-only or unsupported fields
+          jq 'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)' taskdef.json > cleaned_taskdef.json
+
+          # Inject new image
+          jq --arg IMAGE "${{ secrets.ECR_REGISTRY }}/hcl-bayer-patient_ecr-dev:${SHORT_SHA}" '.containerDefinitions[0].image = $IMAGE' cleaned_taskdef.json > updated_taskdef.json
+
           NEW_TASK_ARN=$(aws ecs register-task-definition --cli-input-json file://updated_taskdef.json --query 'taskDefinition.taskDefinitionArn' --output text)
-          aws ecs update-service --cluster hcl-bayer-ecs-cluster-dev --service hcl-bayer-patient-service-dev --task-definition $NEW_TASK_ARN
+
+          aws ecs update-service \
+            --cluster hcl-bayer-ecs-cluster-dev \
+            --service hcl-bayer-patient-service-dev \
+            --task-definition $NEW_TASK_ARN
 
       - name: Deploy Appointment Service
         run: |
-          TASK_DEF=$(aws ecs describe-task-definition --task-definition hcl-bayer-appointment-task-dev --query 'taskDefinition' --output text)
-          echo "$TASK_DEF" > taskdef.json
-          jq '.containerDefinitions[0].image = "${{ secrets.ECR_REGISTRY }}/hcl-bayer-appointment_ecr-dev:${SHORT_SHA}"' taskdef.json > updated_taskdef.json
+          aws ecs describe-task-definition --task-definition hcl-bayer-appointment-task-dev --query 'taskDefinition' --output json > taskdef.json
+
+          # Remove all read-only or unsupported fields
+          jq 'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)' taskdef.json > cleaned_taskdef.json
+
+          # Inject new image
+          jq --arg IMAGE "${{ secrets.ECR_REGISTRY }}/hcl-bayer-appointment_ecr-dev:${SHORT_SHA}" '.containerDefinitions[0].image = $IMAGE' cleaned_taskdef.json > updated_taskdef.json
           NEW_TASK_ARN=$(aws ecs register-task-definition --cli-input-json file://updated_taskdef.json --query 'taskDefinition.taskDefinitionArn' --output text)
-          aws ecs update-service --cluster hcl-bayer-ecs-cluster-dev --service hcl-bayer-appointment-service-dev --task-definition $NEW_TASK_ARN
+
+          aws ecs update-service \
+            --cluster hcl-bayer-ecs-cluster-dev \
+            --service hcl-bayer-appointment-service-dev \
+            --task-definition $NEW_TASK_ARN
