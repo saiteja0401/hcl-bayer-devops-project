@@ -9,10 +9,6 @@ Want the full details? Check these out:
 - [Main Challenge Page](https://hackathon.baywsf.com/devops/index.html)
 - [Fargate Track Details](https://hackathon.baywsf.com/devops/fargate-track.html)
 
-## Architecture Diagram 🏗️
-
-![Architecture Diagram](path/to/architecture-diagram.png)  
-_(Note: Add your architecture diagram here to see how everything connects!)_
 
 ## Project Overview 🌟
 
