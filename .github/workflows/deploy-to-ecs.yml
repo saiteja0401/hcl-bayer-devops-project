@@ -1,0 +1,41 @@
+name: Deploy to ECS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Set short SHA
+        id: vars
+        run: echo "SHORT_SHA=${GITHUB_SHA::8}" >> $GITHUB_ENV
+
+      - name: Deploy Patient Service
+        run: |
+          TASK_DEF=$(aws ecs describe-task-definition --task-definition hcl-bayer-patient-task-dev --query 'taskDefinition' --output json)
+          echo "$TASK_DEF" > taskdef.json
+          jq '.containerDefinitions[0].image = "${{ secrets.ECR_REGISTRY }}/hcl-bayer-patient_ecr-dev:${SHORT_SHA}"' taskdef.json > updated_taskdef.json
+          NEW_TASK_ARN=$(aws ecs register-task-definition --cli-input-json file://updated_taskdef.json --query 'taskDefinition.taskDefinitionArn' --output text)
+          aws ecs update-service --cluster hcl-bayer-ecs-cluster-dev --service hcl-bayer-patient-service-dev --task-definition $NEW_TASK_ARN
+
+      - name: Deploy Appointment Service
+        run: |
+          TASK_DEF=$(aws ecs describe-task-definition --task-definition hcl-bayer-appointment-task-dev --query 'taskDefinition' --output text)
+          echo "$TASK_DEF" > taskdef.json
+          jq '.containerDefinitions[0].image = "${{ secrets.ECR_REGISTRY }}/hcl-bayer-appointment_ecr-dev:${SHORT_SHA}"' taskdef.json > updated_taskdef.json
+          NEW_TASK_ARN=$(aws ecs register-task-definition --cli-input-json file://updated_taskdef.json --query 'taskDefinition.taskDefinitionArn' --output text)
+          aws ecs update-service --cluster hcl-bayer-ecs-cluster-dev --service hcl-bayer-appointment-service-dev --task-definition $NEW_TASK_ARN
