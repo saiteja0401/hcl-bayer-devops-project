@@ -40,8 +40,7 @@ jobs:
       - name: Build and Push Appointment Service Image
         run: |
           docker build -t appointment-service -f src/appointment-service/Dockerfile src/appointment-service
-          docker tag appointment-service:latest ${{ secrets.ECR_REGISTRY }}/
-
+          docker tag appointment-service:latest ${{ secrets.ECR_REGISTRY }}/hcl-bayer-appointment_ecr-dev:${SHORT_SHA}
           docker push ${{ secrets.ECR_REGISTRY }}/hcl-bayer-appointment_ecr-dev:${SHORT_SHA}
           docker rmi appointment-service:latest
           docker rmi ${{ secrets.ECR_REGISTRY }}/hcl-bayer-appointment_ecr-dev:${SHORT_SHA}
